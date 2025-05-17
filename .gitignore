@@ -10,7 +10,7 @@ ENV/
 env/
 env.bak/
 venv.bak/
-
+data/
 # MLflow
 mlruns/
 .mlflow_tracking_uri # If you store it in a file

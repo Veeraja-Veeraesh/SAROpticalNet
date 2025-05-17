@@ -1,0 +1,11 @@
+torch
+torchvision
+Pillow
+numpy
+matplotlib
+PyYAML
+tqdm
+wandb # If you decide to use it too
+mlflow
+boto3 # Will add later for S3
+streamlit # Will add later

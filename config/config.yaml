@@ -1,0 +1,41 @@
+# config/config.yaml
+# Paths
+# DATA_DIR: "/kaggle/input/sentinel12-image-pairs-segregated-by-terrain/v_2" # Original Kaggle path
+DATA_DIR: "./data/v2/"
+OUTPUT_DIR: "./outputs/images/"
+CHECKPOINT_DIR: "./outputs/checkpoints/" # For local non-MLflow checkpoints if needed
+
+# Model & Training Hyperparameters
+DEVICE: "cuda" # "cuda" or "cpu"
+LEARNING_RATE_GEN: 0.0002
+LEARNING_RATE_DISC: 0.0002
+BATCH_SIZE: 1
+NUM_EPOCHS: 5 # Start with a small number for testing, increase for real training
+IMG_SIZE: 256
+CHANNELS_IMG_GRAY: 1
+CHANNELS_IMG_COLOR: 3
+LAMBDA_CYCLE: 10
+LAMBDA_L1: 100
+LAMBDA_CONTENT: 1
+# VGG_CONTENT_LAYERS_INDICES: # Not directly used, CHOSEN_VGG_LAYER_INDEX is
+#   block3_conv3: 16
+#   block4_conv3: 23
+CHOSEN_VGG_LAYER_INDEX: 16 # Corresponds to 'block3_conv3' for vgg16.features
+MANUAL_SEED: 42
+
+# Data Loading
+TERRAIN_CLASSES_TO_USE: ["agri"] # List of terrain classes, or null for all
+MAX_IMAGES_PER_CLASS: 100 # To limit dataset size for faster iterations
+
+# MLflow Settings (will add more later)
+MLFLOW_TRACKING_URI: "http://127.0.0.1:5000" # Example for local MLflow server
+MLFLOW_EXPERIMENT_NAME: "SAROpticalNet"
+
+# W&B (kept for reference, MLflow will be primary for registry)
+WANDB_PROJECT: "SAROpticalNet"
+WANDB_ENTITY: null # Your W&B username or team name, or null for personal
+WANDB_API_KEY_SECRET_NAME: "WANDB_API_KEY" # For Kaggle secrets
+
+# Cloud Settings (examples, adjust as needed)
+S3_BUCKET_NAME: "your-s3-bucket-for-sar-data"
+S3_DATA_PREFIX: "sentinel12_terrain/v2/" # Path within the bucket
