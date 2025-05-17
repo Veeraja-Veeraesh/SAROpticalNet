@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.env
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# MLflow
+mlruns/
+.mlflow_tracking_uri # If you store it in a file
+
+# Kaggle (if you have local Kaggle files)
+.ipynb_checkpoints/
+/kaggle/working/
+/kaggle/input/
+
+# IDE / OS
+.vscode/
+.idea/
+*.DS_Store
