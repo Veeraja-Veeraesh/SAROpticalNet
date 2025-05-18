@@ -51,12 +51,13 @@ def main():
         # --- Data Loading ---
         transform_gray, transform_color = get_transforms(config['IMG_SIZE'])
         dataset = SentinelDataset(
-            root_dir=config['DATA_DIR'],
+            root_dir=config['DATA_DIR'], # This can now be gs:// path
             terrain_classes=config['TERRAIN_CLASSES_TO_USE'],
             transform_gray=transform_gray,
             transform_color=transform_color,
             img_size=config['IMG_SIZE'],
-            max_images_per_class=config['MAX_IMAGES_PER_CLASS']
+            max_images_per_class=config['MAX_IMAGES_PER_CLASS'],
+            gcs_bucket_name=config.get('GCS_BUCKET_NAME') # Pass bucket name if using GCS
         )
 
         if len(dataset) == 0:
@@ -64,6 +65,17 @@ def main():
             mlflow.log_metric("status", 0) # 0 for failure
             mlflow.set_terminated("FAILED", "Dataset empty")
             return
+        
+        print(f"Successfully initialized dataset. Number of items: {len(dataset)}")
+        if len(dataset) > 0:
+            print("Attempting to load first item...")
+            try:
+                s1_sample, s2_sample = dataset[0]
+                print(f"First S1 sample shape: {s1_sample.shape}, dtype: {s1_sample.dtype}")
+                print(f"First S2 sample shape: {s2_sample.shape}, dtype: {s2_sample.dtype}")
+            except Exception as e:
+                print(f"Error loading first sample: {e}")
+        # return # Add this to exit after testing data loading
 
         dataloader = DataLoader(
             dataset, batch_size=config['BATCH_SIZE'], shuffle=True,
