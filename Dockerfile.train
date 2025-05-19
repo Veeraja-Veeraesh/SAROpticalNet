@@ -1,0 +1,56 @@
+# Dockerfile.train
+
+# Start with a base image that has Python and CUDA (if you plan to use GPU for training)
+# For CUDA 11.8 (PyTorch often uses this or similar, check PyTorch website for recommended CUDA for your version)
+# You can find official PyTorch images on Docker Hub: hub.docker.com/r/pytorch/pytorch
+# Example: pytorch/pytorch:1.13.1-cuda11.6-cudnn8-runtime (check for newer versions)
+# If you need a specific CUDA version, adjust the base image accordingly.
+# For CPU-only training, you can use a simpler Python base image: python:3.10-slim
+
+# Let's choose a PyTorch base image that includes CUDA.
+# Check PyTorch website for the latest recommended image for your PyTorch version.
+# Example for PyTorch 2.0.1 with CUDA 11.8 (adjust if your PyTorch version differs)
+FROM pytorch/pytorch:2.7.0-cuda12.8-cudnn9-devel
+# Using '-devel' image initially as it includes compilers if any Python packages need to build C extensions.
+# For a smaller final image, you could switch to a '-runtime' image after confirming all packages install.
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV GOOGLE_CLOUD_PROJECT=""
+
+# Set a working directory
+WORKDIR /app
+
+# Install system dependencies if any (e.g., git for GitPython, though often included in devel images)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+git \
+&& apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements file first to leverage Docker layer caching
+COPY requirements.txt .
+
+# Install Python dependencies
+# Consider upgrading pip first
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code
+COPY . .
+# If your config.yaml contains secrets or machine-specific paths not suitable for the image,
+# consider managing them via environment variables or mounted volumes at runtime.
+# For now, we copy it, assuming MLFLOW_TRACKING_URI will be correctly set for the environment
+# where the Docker container runs.
+
+# GCP Authentication:
+# The container will need to authenticate to GCS and other GCP services.
+# This is best handled by assigning a service account to the GCE VM or Cloud Run job
+# that runs this container. The application inside the container will then
+# automatically use these credentials (Application Default Credentials - ADC).
+# No need to embed service account keys in the image.
+
+# Command to run the training script
+# The actual configuration (like which GCS bucket, MLflow URI) will be
+# ideally passed via environment variables or a config file mounted at runtime if it varies.
+# For now, we assume config.yaml is set up correctly for the target environment.
+ENTRYPOINT ["python", "src/train.py"]

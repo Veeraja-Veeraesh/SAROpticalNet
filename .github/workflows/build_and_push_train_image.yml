@@ -1,0 +1,68 @@
+# .github/workflows/build_and_push_train_image.yml
+name: Build and Push Training Docker Image
+
+on:
+  push:
+    branches:
+      - main # Trigger on pushes to the main branch
+    paths: # Only trigger if relevant files change
+      - 'src/**'
+      - 'config/**'
+      - 'requirements.txt'
+      - 'Dockerfile.train'
+      - '.github/workflows/build_and_push_train_image.yml'
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  build-and-push-image:
+    name: Build and Push Training Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write' # Required for Workload Identity Federation
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ secrets.ARTIFACT_REGISTRY_REPO_REGION }}-docker.pkg.dev
+        env:
+          # Extract region from ARTIFACT_REGISTRY_REPO (e.g., asia-south1 from asia-south1-docker.pkg.dev/...)
+          ARTIFACT_REGISTRY_REPO_REGION: 'asia-south1'
+
+
+      - name: Build Docker image
+        id: build_image
+        run: |
+          IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7) # Use short Git SHA as image tag for versioning
+          echo "Building image: ${{ secrets.ARTIFACT_REGISTRY_REPO }}/${{ secrets.IMAGE_NAME_TRAIN }}:${IMAGE_TAG}"
+          docker build -t "${{ secrets.ARTIFACT_REGISTRY_REPO }}/${{ secrets.IMAGE_NAME_TRAIN }}:${IMAGE_TAG}" \
+                       -t "${{ secrets.ARTIFACT_REGISTRY_REPO }}/${{ secrets.IMAGE_NAME_TRAIN }}:latest" \
+                       -f Dockerfile.train .
+          echo "image_uri=${{ secrets.ARTIFACT_REGISTRY_REPO }}/${{ secrets.IMAGE_NAME_TRAIN }}:${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "image_uri_latest=${{ secrets.ARTIFACT_REGISTRY_REPO }}/${{ secrets.IMAGE_NAME_TRAIN }}:latest" >> $GITHUB_OUTPUT
+
+      - name: Push Docker image (tagged with SHA)
+        run: docker push ${{ steps.build_image.outputs.image_uri }}
+
+      - name: Push Docker image (tagged with latest)
+        run: docker push ${{ steps.build_image.outputs.image_uri_latest }}
+
+      - name: Summary
+        run: |
+          echo "Successfully built and pushed image:"
+          echo "Tagged with SHA: ${{ steps.build_image.outputs.image_uri }}"
+          echo "Tagged with latest: ${{ steps.build_image.outputs.image_uri_latest }}"
