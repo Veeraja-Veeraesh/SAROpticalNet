@@ -45,3 +45,6 @@ GCP_PROJECT_ID: "saropticalnet"
 DATA_DIR: "gs://saropticalnet-data/data/v_2/"
 GCS_BUCKET_NAME: "saropticalnet-data"
 GCS_DATA_PREFIX: "data/v_2/"
+
+MODEL_ALIAS_TO_LOAD: "prod-candidate" # The alias Streamlit should load (e.g., champion, latest-validated)
+DEVICE_STREAMLIT: "cpu"

@@ -1,0 +1,8 @@
+streamlit >= 1.20.0
+Pillow
+numpy
+torch # CPU version is fine if DEVICE_STREAMLIT is "cpu"
+torchvision # CPU version
+PyYAML
+mlflow >= 1.20.0 # For loading the model
+google-cloud-storage

@@ -1,0 +1,87 @@
+name: Build and Deploy Streamlit App
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'streamlit_app.py'
+      - 'src/model.py'
+      - 'config/config.yaml'
+      - 'requirements_app.txt'
+      - 'Dockerfile.app'
+      - '.github/workflows/deploy_streamlit_app.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy-app:
+    name: Build and Deploy Streamlit App
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write' # For Workload Identity Federation
+
+    env:
+      IMAGE_NAME: sarvision-streamlit-app
+      CLOUD_RUN_SERVICE_NAME: sarvision-app # Or your preferred name
+      GCP_REGION: asia-south1 # Or your preferred GCP region for Cloud Run & AR
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
+
+      - name: Build and Push Docker image
+        id: build_push
+        run: |
+          IMAGE_TAG_SHA=$(echo $GITHUB_SHA | cut -c1-7)
+          # ARTIFACT_REGISTRY_REPO comes from secrets (e.g., asia-south1-docker.pkg.dev/your-project/your-repo-name)
+          FULL_IMAGE_URI_SHA="${{ secrets.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG_SHA}"
+          FULL_IMAGE_URI_LATEST="${{ secrets.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME }}:latest"
+          
+          echo "Building image with SHA tag: ${FULL_IMAGE_URI_SHA}"
+          echo "Building image with latest tag: ${FULL_IMAGE_URI_LATEST}"
+
+          docker build -t "${FULL_IMAGE_URI_SHA}" \
+                       -t "${FULL_IMAGE_URI_LATEST}" \
+                       -f Dockerfile.app .
+          
+          echo "Pushing image (SHA): ${FULL_IMAGE_URI_SHA}"
+          docker push "${FULL_IMAGE_URI_SHA}"
+          echo "Pushing image (latest): ${FULL_IMAGE_URI_LATEST}"
+          docker push "${FULL_IMAGE_URI_LATEST}"
+          
+          echo "image_uri=${FULL_IMAGE_URI_SHA}" >> $GITHUB_OUTPUT
+
+      - name: Deploy to Google Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.CLOUD_RUN_SERVICE_NAME }}
+          region: ${{ env.GCP_REGION }}
+          image: ${{ steps.build_push.outputs.image_uri }} # Deploy the SHA-tagged image
+          env_vars: | # Pass environment variables to Cloud Run
+            GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID }}
+            MLFLOW_TRACKING_URI=${{ secrets.MLFLOW_TRACKING_URI_PUBLIC }}
+            MODEL_ALIAS_TO_LOAD=${{ secrets.MODEL_ALIAS_FOR_PROD }}
+            # PORT will be set by Cloud Run automatically, Streamlit will use it
+            # Add any other env vars your Streamlit app needs at runtime
+          flags: "--allow-unauthenticated --min-instances=0 --max-instances=2 --cpu=1 --memory=2Gi --port=8080" # Ensure --port matches what Streamlit listens on if not default 8080
+
+      - name: Show Deployed URL
+        run: |
+          echo "Streamlit App Deployed at: ${{ steps.deploy.outputs.url }}"
