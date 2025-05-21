@@ -1,8 +1,9 @@
 # 🛰️ SAR Image Colorization with MLOps on GCP
 
 This project demonstrates an end-to-end MLOps pipeline for training a CycleGAN-based model to colorize Sentinel-1 (SAR) grayscale satellite images into pseudo Sentinel-2 optical-like RGB images. The pipeline leverages Google Cloud Platform (GCP) services, MLflow, Docker, and GitHub Actions.
+[Check out the live link](https://sarvision-app-s7ttj6vr3a-el.a.run.app/)
 
-<!-- Image placeholder: Overall architecture diagram -->
+![image architecture](./imgs/architecture.svg)
 
 ## ✨ Features
 
@@ -47,7 +48,7 @@ This project demonstrates an end-to-end MLOps pipeline for training a CycleGAN-b
     *   The Streamlit application (`streamlit_app.py`) is containerized (`Dockerfile.app`).
     *   It loads a specific model version from MLflow based on a configured alias.
     *   GitHub Actions automatically build the Streamlit app image and deploy it to Google Cloud Run on pushes to `main`.
-    ![image architecture](./imgs/architecture.svg)
+    
     
 ## 🏁 Getting Started / Reproducing
 
