@@ -76,6 +76,8 @@ jobs:
             GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID }}
             MLFLOW_TRACKING_URI=${{ secrets.MLFLOW_TRACKING_URI_PUBLIC }}
             MODEL_ALIAS_TO_LOAD=${{ secrets.MODEL_ALIAS_FOR_PROD }}
+            # PORT will be set by Cloud Run automatically, Streamlit will use it
+            # Add any other env vars your Streamlit app needs at runtime
           flags: "--allow-unauthenticated --min-instances=0 --max-instances=2 --cpu=1 --memory=2Gi --port=8080"
 
       - name: Show Deployed URL

@@ -14,7 +14,9 @@ data/
 # MLflow
 mlruns/
 .mlflow_tracking_uri # If you store it in a file
-
+wandb/
+external_models/gen_AB.pth
+external_models/gen_AB(1).pth
 # Kaggle (if you have local Kaggle files)
 .ipynb_checkpoints/
 /kaggle/working/

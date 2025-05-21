@@ -227,6 +227,7 @@ def main():
             if (epoch + 1) % config.get("SAVE_MODEL_EPOCH_INTERVAL", 10) == 0 or epoch == config['NUM_EPOCHS'] - 1:
                 print(f"Logging models to MLflow for epoch {epoch+1}...")
                 mlflow.pytorch.log_model(pytorch_model=gen_AB, artifact_path="generator_AB_model", registered_model_name=config.get("MLFLOW_MODEL_NAME_GEN_AB"))
+                mlflow.pytorch.log_state_dict(gen_AB.state_dict(), artifact_path="model_state_dict")
                 mlflow.pytorch.log_model(gen_BA, "generator_BA_model") 
                 mlflow.pytorch.log_model(disc_X, "discriminator_X_model")
                 mlflow.pytorch.log_model(disc_Y, "discriminator_Y_model")

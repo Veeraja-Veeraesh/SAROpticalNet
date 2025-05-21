@@ -1,0 +1,33 @@
+{
+    "KAGGLE_NOTEBOOK_INFO": "Training run from original sarvision.ipynb",
+    "KAGGLE_RUN_DATE": "YYYY-MM-DD",
+    "DEVICE_USED_ON_KAGGLE": "cpu",
+    "DATA_DIR_KAGGLE": "/kaggle/input/sentinel12-image-pairs-segregated-by-terrain/v_2",
+    "TERRAIN_CLASSES_USED_KAGGLE": [
+        "agri"
+    ],
+    "MAX_IMAGES_PER_TERRAIN_KAGGLE": 1000,
+    "LEARNING_RATE_GEN": 2e-4,
+    "LEARNING_RATE_DISC": 2e-4,
+    "BATCH_SIZE": 1,
+    "NUM_EPOCHS_COMPLETED_KAGGLE": 100,
+    "IMG_SIZE": 256,
+    "CHANNELS_IMG_GRAY": 1,
+    "CHANNELS_IMG_COLOR": 3,
+    "GENERATOR_FEATURES_BASE": 64,
+    "DISCRIMINATOR_FEATURES_BASE": 64,
+    "LAMBDA_CYCLE": 10,
+    "LAMBDA_L1": 100,
+    "LAMBDA_CONTENT": 1,
+    "CHOSEN_VGG_LAYER_INDEX": 16,
+    "MANUAL_SEED": 42,
+    "OPTIMIZER_BETAS_GEN": [
+        0.5,
+        0.999
+    ],
+    "OPTIMIZER_BETAS_DISC": [
+        0.5,
+        0.999
+    ],
+    "NOTES": "Model checkpoint saved from Kaggle training session. To be registered in MLflow."
+}
